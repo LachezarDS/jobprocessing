@@ -1,0 +1,73 @@
+plugins {
+	id 'org.springframework.boot' version '2.3.4.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+	id 'java'
+	id 'jacoco'
+	id 'idea'
+}
+
+group = 'co.sumup'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+idea {
+	module {
+		testSourceDirs += file('src/component-test/java')
+	}
+}
+
+configurations {
+	componentTestImplementation.extendsFrom testImplementation
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation 'commons-io:commons-io:2.8.0'
+
+	componentTestImplementation 'io.rest-assured:rest-assured:4.2.0'
+	componentTestImplementation 'io.rest-assured:json-path:4.2.0'
+	componentTestImplementation 'io.rest-assured:xml-path:4.2.0'
+}
+
+sourceSets {
+	componentTest {
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+
+		java {
+			srcDirs = ['src/component-test/java']
+		}
+
+		resources {
+			srcDirs = ['src/component-test/resources']
+		}
+	}
+}
+
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+task componentTest(type: Test) {
+	useJUnitPlatform()
+	testClassesDirs = sourceSets.componentTest.output.classesDirs
+	classpath = sourceSets.componentTest.runtimeClasspath
+
+	testLogging {
+		showStandardStreams = true
+	}
+
+	mustRunAfter test
+}
+
+check.dependsOn componentTest
